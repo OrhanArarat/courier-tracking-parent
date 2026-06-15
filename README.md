@@ -1,274 +1,247 @@
-# 🚚 Courier Tracking System
+# Courier Tracking System
 
-Microservice-based courier tracking system built with **Java 21**, **Spring Boot 3**, **Kafka**, **PostgreSQL**, and *
-*Couchbase**.
+Kurye takip sistemi, mikro servisler mimarisini kullanan, uygun ölçeklendirme ve yüksek performans için tasarlanmış bir
+Spring Boot uygulamasıdır.
 
----
+## 📋 Proje Özeti
 
-## 📐 Architecture
+Courier Tracking System, kuryelerin, depoların ve siparişlerin yönetimini sağlayan dağıtılmış bir sistem. Her servis,
+kendi sorumluluğu altında çalışır ve mesaj kuyruğu üzerinden asenkron iletişim yapar.
+
+## 🏗️ Sistem Mimarisi
 
 ```
-                        ┌────────────────────────────────────────────────────────────────────┐
-                        │              API Gateway :8080                                     │
-                        │        (Spring Cloud Gateway)                                      │
-                        └────────┬──────────────┬──────────────┬──────────────────────┬──────┘
-                                 │              │              │                      │
-                    /locations   │  /stores     │  /distances  │                      │
-                                 ▼              ▼              ▼                      ▼
-                ┌──────────────────┐  ┌───────────────┐  ┌──────────────────┐ ┌──────────────────┐
-                │ Location Service │  │ Store Service │  │ Distance Service │ │ Courier Service │
-                │     :8081        │  │    :8082      │  │     :8085        │ │     :8083        │
-                │  (PostgreSQL)    │  │  (Couchbase)  │  │MongoDB,Couchbase │ │  (PostgreSQL)    │
-                └────────┬─────────┘  └───────┬───────┘  └────────┬─────────┘ └────────┬─────────┘
-                         │                    ▲                   ▲                    ▲
-                         │   Kafka Topic:     │                   │                    │
-                         └──► courier.location.events ──────────►─┘──────────►───────►─┘
-                                  (Observer Pattern)
+┌─────────────────────────────────────────────────────────────┐
+│                    API Gateway Port 8080                    │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐     │
+│  │   Courier    │  │   Distance   │  │   Location   │     │
+│  │   Service    │  │   Service    │  │   Service    │     │
+│  │  (Port 8081) │  │ (Port 8082)  │  │ (Port 8083)  │     │
+│  └──────────────┘  └──────────────┘  └──────────────┘     │
+│         │                 │                  │              │
+│  ┌──────────────┐                                          │
+│  │    Store     │                                          │
+│  │   Service    │                                          │
+│  │ (Port 8084)  │                                          │
+│  └──────────────┘                                          │
+│         │                 │                  │              │
+└─────────────────────────────────────────────────────────────┘
+         │                 │                  │
+┌────────┴─────────────────┴──────────────────┴─────────────┐
+│              Kafka (Port 9092)                             │
+│            Zookeeper (Port 2181)                           │
+│            Kafka UI (Port 9090)                            │
+└────────────────────────────────────────────────────────────┘
+         │                 │                  │
+┌────────┴────────┬────────┴────────┬────────┴──────────┐
+│                 │                 │                  │
+│  PostgreSQL     │  Couchbase      │  MongoDB         │
+│  (Port 5432)    │  (Port 8091)    │  (Port 27017)    │
+│                 │                 │  Mongo Express   │
+│                 │                 │  (Port 7071)     │
+└─────────────────┴─────────────────┴──────────────────┘
 ```
 
-### Services
+## 🛠️ Teknoloji Stack
 
-| Service              | Port | DB                 | Role                                           |
-|----------------------|------|--------------------|------------------------------------------------|
-| **api-gateway**      | 8080 | —                  | Single entry point, routing                    |
-| **location-service** | 8081 | PostgreSQL         | Accepts location input, publishes Kafka events |
-| **store-service**    | 8082 | Couchbase          | 100m proximity check, 1-min reentry rule       |
-| **distance-service** | 8085 | MongoDB, Couchbase | Accumulates total travel distance              |
-| **courier-service**  | 8083 | PostgreSQL         | Courier information                            |
+| Bileşen      | Sürüm    | Amaç                 |
+|--------------|----------|----------------------|
+| Java         | 21       | Program dili         |
+| Spring Boot  | 3.2.3    | Framework            |
+| Spring Cloud | 2023.0.0 | Mikro servisler      |
+| PostgreSQL   | 16       | İlişkisel veritabanı |
+| Couchbase    | 7.6.1    | NoSQL veritabanı     |
+| MongoDB      | 5.0      | Doküman veritabanı   |
+| Kafka        | 7.6.0    | Mesaj kuyruğu        |
+| Docker       | -        | Konteynerizasyon     |
+| Maven        | 3.x      | Bağımlılık yönetimi  |
 
-### Design Patterns Used
+## 📦 Servisler
 
-1. **Observer Pattern** — `LocationEventPublisher` (Subject) publishes to Kafka. `store-service` and `distance-service`
-   are independent Observers.
-2. **Strategy Pattern** — `DistanceCalculator` interface with `HaversineDistanceCalculator` implementation. Swap
-   algorithms without changing service logic.
-3. **Singleton Pattern** — `StoreInitializerService` loads `stores.json` once on startup into Couchbase.
+### 1. API Gateway
 
----
+- **Port:** 8080
+- **Açıklama:** Tüm isteklerin giriş noktası. Routlama, load balancing ve authentication sağlar.
+- **Teknoloji:** Spring Cloud Gateway
 
-## 🚀 Quick Start
+### 2. Courier Service
 
-### Prerequisites
+- **Port:** 8081
+- **Açıklama:** Kurye bilgilerinin yönetimi ve işlenmesi
+- **Veritabanı:** PostgreSQL + Couchbase
+- **Teknoloji:** Spring Data JPA, QueryDSL, Liquibase
 
+### 3. Distance Service
+
+- **Port:** 8082
+- **Açıklama:** Mesafe hesaplama ve optimizasyon algoritmaları
+- **Veritabanı:** MongoDB + Couchbase
+- **Teknoloji:** Spring Data MongoDB
+
+### 4. Location Service
+
+- **Port:** 8083
+- **Açıklama:** Konum tabanlı servisler
+- **Teknoloji:** Spring Boot Web
+
+### 5. Store Service
+
+- **Port:** 8084
+- **Açıklama:** Depo bilgilerinin yönetimi
+- **Teknoloji:** Spring Boot Web
+
+## 🚀 Başlangıç
+
+### Ön Gereksinimler
+
+- Java 21 kurulu olmalı
+- Maven 3.8.0 veya üzeri
 - Docker & Docker Compose
-- Java 21 (for local development)
-- Maven 3.9+
+- Git
 
-### Run Everything with Docker
+### Kurulum Adımları
+
+1. **Projeyi klonlayın:**
 
 ```bash
-# 1. Clone and build all services
-git clone <repo-url>
+git clone <repository-url>
 cd courier-tracking
-
-# 2. Build JARs
-mvn clean package -DskipTests
-
-# 3. Start all infrastructure + microservices
-chmod +x docker/postgres-init.sh docker/couchbase-init.sh
-docker compose up --build
-
-# Wait ~60 seconds for all services to start
 ```
 
-Services will be available at:
-
-- **API Gateway**: http://localhost:8080
-- **Kafka UI**: http://localhost:9090
-- **Couchbase UI**: http://localhost:8091 (admin / password123)
-
----
-
-## 📡 API Reference
-
-All requests go through the API Gateway on port **8080**.
-
-### 1. Record Courier Location
+2. **Altyapıyı başlatın:**
 
 ```bash
-POST http://localhost:8080/api/v1/locations
-Content-Type: application/json
-
-{
-  "courierId": "courier-42",
-  "lat": 40.9923307,
-  "lng": 29.1244229,
-  "time": "2024-03-15T10:30:00Z"
-}
+cd courier-tracking-parent
+docker-compose up -d
 ```
 
-Response:
+Docker Compose aşağıdaki servisleri başlatacak:
 
-```json
-{
-  "id": 1,
-  "courierId": "courier-42",
-  "lat": 40.9923307,
-  "lng": 29.1244229,
-  "recordedAt": "2024-03-15T10:30:00Z",
-  "message": "Location recorded and event dispatched"
-}
-```
+- PostgreSQL
+- Couchbase
+- MongoDB
+- Kafka & Zookeeper
+- Kafka UI
+- Mongo Express
 
-### 2. Get Total Travel Distance
+3. **Projeyi derleyin:**
 
 ```bash
-GET http://localhost:8080/api/v1/distances/courier-42/total
+cd courier-tracking-parent
+mvn clean install
 ```
 
-Response:
+4. **Servisleri başlatın (her biri için ayrı terminal):**
 
-```json
-{
-  "courierId": "courier-42",
-  "totalDistanceMeters": 1542.7,
-  "totalDistanceKilometers": 1.5427,
-  "lastUpdated": "2024-03-15T10:35:00Z"
-}
-```
-
-### 3. Get Store Entrance Logs
+**API Gateway:**
 
 ```bash
-GET http://localhost:8080/api/v1/stores/entrances/courier-42
+cd api-gateway-courier-tracking
+mvn spring-boot:run
 ```
 
-Response:
-
-```json
-{
-  "courierId": "courier-42",
-  "totalEntrances": 2,
-  "logs": [
-    {
-      "storeName": "Ataşehir",
-      "distanceToStore": 45.3,
-      "enteredAt": "2024-03-15T10:30:00Z"
-    }
-  ]
-}
-```
-
-### 4. List All Migros Stores
+**Courier Service:**
 
 ```bash
-GET http://localhost:8080/api/v1/stores
+cd courier-service
+mvn spring-boot:run
 ```
 
----
-
-## 🧪 Testing
-
-### Automated Test Scenario
+**Distance Service:**
 
 ```bash
-# Send a courier near Ataşehir store (lat: 40.9923307, lng: 29.1244229)
-# 1st location: ~50m from store → should log entrance
-curl -X POST http://localhost:8080/api/v1/locations \
-  -H "Content-Type: application/json" \
-  -d '{
-    "courierId": "test-courier",
-    "lat": 40.9924,
-    "lng": 29.1244,
-    "time": "2024-03-15T10:00:00Z"
-  }'
-
-# 2nd location: same store, 30 seconds later → should NOT log (within 1-min cooldown)
-curl -X POST http://localhost:8080/api/v1/locations \
-  -H "Content-Type: application/json" \
-  -d '{
-    "courierId": "test-courier",
-    "lat": 40.9923,
-    "lng": 29.1243,
-    "time": "2024-03-15T10:00:30Z"
-  }'
-
-# 3rd location: same store, 90 seconds later → should log entrance (cooldown elapsed)
-curl -X POST http://localhost:8080/api/v1/locations \
-  -H "Content-Type: application/json" \
-  -d '{
-    "courierId": "test-courier",
-    "lat": 40.9923,
-    "lng": 29.1243,
-    "time": "2024-03-15T10:01:30Z"
-  }'
-
-# Check entrance logs (expect 2 entries)
-curl http://localhost:8080/api/v1/stores/entrances/test-courier
-
-# Check distance
-curl http://localhost:8080/api/v1/distances/test-courier/total
+cd distance-service
+mvn spring-boot:run
 ```
 
-### Unit Tests
+**Location Service:**
 
 ```bash
+cd location-service
+mvn spring-boot:run
+```
+
+**Store Service:**
+
+```bash
+cd store-service
+mvn spring-boot:run
+```
+
+## 🔌 Veritabanı Bağlantı Bilgileri
+
+| Veritabanı | Host      | Port      | Kullanıcı | Şifre      |
+|------------|-----------|-----------|-----------|------------|
+| PostgreSQL | localhost | 5432      | courier   | courier123 |
+| MongoDB    | localhost | 27017     | -         | -          |
+| Couchbase  | localhost | 8091-8097 | admin     | password   |
+| Kafka      | localhost | 9092      | -         | -          |
+
+### Veritabanı Arayüzleri
+
+- **Kafka UI:** http://localhost:9090
+- **Mongo Express:** http://localhost:7071
+- **Couchbase:** http://localhost:8091
+
+## 📡 API Ağ Geçidi
+
+Tüm API istekleri API Gateway üzerinden yapılır:
+
+```
+curl -X GET http://localhost:8080/api/v1/couriers
+curl -X GET http://localhost:8080/api/v1/distances
+curl -X GET http://localhost:8080/api/v1/locations
+curl -X GET http://localhost:8080/api/v1/stores
+```
+
+## 🧪 Testler
+
+Bütün testleri çalıştırmak için:
+
+```bash
+cd courier-tracking-parent
 mvn test
 ```
 
----
+Specific servisi test etmek için:
 
-## 📁 Project Structure
+```bash
+cd courier-service
+mvn test
+```
+
+## 🐳 Docker ile Deployment
+
+Her servis için Dockerfile mevcuttur. Tüm servisleri Docker ile çalıştırmak için:
+
+```bash
+cd courier-tracking-parent
+docker-compose -f docker-compose.yml up -d
+```
+
+## 📊 Lokal Geliştirme Configuration
+
+Her servis için `application.yml` dosyası mevcuttur:
+
+- `courier-service/src/main/resources/application.yml`
+- `distance-service/src/main/resources/application.yml`
+- `location-service/src/main/resources/application.yml`
+- `store-service/src/main/resources/application.yml`
+- `api-gateway-courier-tracking/src/main/resources/application.yml`
+
+## 📝 Proje Yapısı
 
 ```
 courier-tracking/
-├── pom.xml                          # Parent POM
-├── docker-compose.yml
-├── docker/
-│   ├── postgres-init.sh             # Creates location_db + distance_db
-│   └── couchbase-init.sh            # Bucket + index creation
-│
-├── api-gateway/                     # Spring Cloud Gateway :8080
-│   └── src/main/resources/application.yml
-│
-├── location-service/                # Accepts location, publishes Kafka :8081
-│   ├── Dockerfile
-│   └── src/main/java/com/couriertracking/location/
-│       ├── controller/LocationController.java
-│       ├── service/LocationService.java
-│       ├── kafka/LocationEventPublisher.java   ← Observer Subject
-│       ├── util/DistanceCalculator.java        ← Strategy Interface
-│       └── util/HaversineDistanceCalculator.java ← Strategy Impl
-│
-├── store-service/                   # Proximity checks, Couchbase :8082
-│   └── src/main/java/com/couriertracking/store/
-│       ├── kafka/LocationEventConsumer.java    ← Observer
-│       ├── service/StoreProximityService.java  ← 100m + 1min logic
-│       └── service/StoreInitializerService.java ← Singleton
-│
-└── distance-service/                # Distance accumulation, PostgreSQL :8083
-    └── src/main/java/com/couriertracking/distance/
-        ├── kafka/LocationEventConsumer.java    ← Observer
-        └── service/DistanceService.java        ← getTotalTravelDistance()
+├── courier-tracking-parent/        # Parent POM & Docker Compose
+│   ├── pom.xml
+│   ├── docker-compose.yml
+│   └── docker/
+├── api-gateway-courier-tracking/   # API Gateway Service
+├── courier-service/                # Courier Service
+├── distance-service/               # Distance Service
+├── location-service/               # Location Service
+└── store-service/                  # Store Service
 ```
-
----
-
-## ⚙️ Environment Variables
-
-| Variable                  | Default          | Used By            |
-|---------------------------|------------------|--------------------|
-| `POSTGRES_HOST`           | localhost        | location, distance |
-| `POSTGRES_USER`           | courier          | location, distance |
-| `POSTGRES_PASSWORD`       | courier123       | location, distance |
-| `COUCHBASE_HOST`          | localhost        | store              |
-| `COUCHBASE_USER`          | Administrator    | store              |
-| `COUCHBASE_PASSWORD`      | password123      | store              |
-| `COUCHBASE_BUCKET`        | courier_tracking | store              |
-| `KAFKA_BOOTSTRAP_SERVERS` | localhost:9092   | all services       |
-| `LOCATION_SERVICE_HOST`   | localhost        | api-gateway        |
-| `STORE_SERVICE_HOST`      | localhost        | api-gateway        |
-| `DISTANCE_SERVICE_HOST`   | localhost        | api-gateway        |
-
----
-
-## 🔍 Monitoring
-
-| URL                                   | Description     |
-|---------------------------------------|-----------------|
-| http://localhost:9090                 | Kafka UI        |
-| http://localhost:8091                 | Couchbase Admin |
-| http://localhost:8080/actuator/health | Gateway health  |
-| http://localhost:8081/actuator/health | Location health |
-| http://localhost:8082/actuator/health | Store health    |
-| http://localhost:8083/actuator/health | Distance health |
