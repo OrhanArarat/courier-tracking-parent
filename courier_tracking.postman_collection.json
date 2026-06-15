@@ -1,0 +1,107 @@
+{
+	"info": {
+		"_postman_id": "a1fdb834-770a-433f-bb6e-f38fc47327d3",
+		"name": "courier_tracking",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "16522283"
+	},
+	"item": [
+		{
+			"name": "save-location",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"phoneNumber\": \"5554443322\",\n  \"lat\": 40.9924,\n  \"lng\": 29.2244,\n  \"time\": \"2024-03-19T10:35:00Z\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/api/v1/locations",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"v1",
+						"locations"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "getTotatDistanceByCourierId",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/api/v1/distances/2/total",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"v1",
+						"distances",
+						"2",
+						"total"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "getStoreEntranceByCourierId",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/api/v1/stores/entrances/2",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"v1",
+						"stores",
+						"entrances",
+						"2"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "getAllStores",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/api/v1/stores",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"v1",
+						"stores"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
