@@ -1,14 +1,14 @@
 # Courier Tracking System
 
-Kurye takip sistemi, mikro servisler mimarisini kullanan, uygun ölçeklendirme ve yüksek performans için tasarlanmış bir
-Spring Boot uygulamasıdır.
+The Courier Tracking System is a Spring Boot application using microservices architecture, designed for scalability and
+high performance.
 
-## 📋 Proje Özeti
+## 📋 Project Overview
 
-Courier Tracking System, kuryelerin, depoların ve siparişlerin yönetimini sağlayan dağıtılmış bir sistem. Her servis,
-kendi sorumluluğu altında çalışır ve mesaj kuyruğu üzerinden asenkron iletişim yapar.
+The Courier Tracking System is a distributed system for managing couriers, warehouses, and orders. Each service operates
+under its own responsibility and communicates asynchronously via a message queue.
 
-## 🏗️ Sistem Mimarisi
+## 🏗️ System Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -18,13 +18,13 @@ kendi sorumluluğu altında çalışır ve mesaj kuyruğu üzerinden asenkron il
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐     │
 │  │   Courier    │  │   Distance   │  │   Location   │     │
 │  │   Service    │  │   Service    │  │   Service    │     │
-│  │  (Port 8081) │  │ (Port 8082)  │  │ (Port 8083)  │     │
+│  │  (Port 8083) │  │ (Port 8085)  │  │ (Port 8081)  │     │
 │  └──────────────┘  └──────────────┘  └──────────────┘     │
 │         │                 │                  │              │
 │  ┌──────────────┐                                          │
 │  │    Store     │                                          │
 │  │   Service    │                                          │
-│  │ (Port 8084)  │                                          │
+│  │ (Port 8082)  │                                          │
 │  └──────────────┘                                          │
 │         │                 │                  │              │
 └─────────────────────────────────────────────────────────────┘
@@ -44,80 +44,75 @@ kendi sorumluluğu altında çalışır ve mesaj kuyruğu üzerinden asenkron il
 └─────────────────┴─────────────────┴──────────────────┘
 ```
 
-## 🛠️ Teknoloji Stack
+## 🛠️ Technology Stack
 
-| Bileşen      | Sürüm    | Amaç                 |
-|--------------|----------|----------------------|
-| Java         | 21       | Program dili         |
-| Spring Boot  | 3.2.3    | Framework            |
-| Spring Cloud | 2023.0.0 | Mikro servisler      |
-| PostgreSQL   | 16       | İlişkisel veritabanı |
-| Couchbase    | 7.6.1    | NoSQL veritabanı     |
-| MongoDB      | 5.0      | Doküman veritabanı   |
-| Kafka        | 7.6.0    | Mesaj kuyruğu        |
-| Docker       | -        | Konteynerizasyon     |
-| Maven        | 3.x      | Bağımlılık yönetimi  |
+| Component    | Version  | Purpose               |
+|--------------|----------|-----------------------|
+| Java         | 21       | Programming language  |
+| Spring Boot  | 3.2.3    | Framework             |
+| Spring Cloud | 2023.0.0 | Microservices         |
+| PostgreSQL   | 16       | Relational database   |
+| Couchbase    | 7.6.1    | NoSQL database        |
+| MongoDB      | 5.0      | Document database     |
+| Kafka        | 7.6.0    | Message queue         |
+| Docker       | -        | Containerization      |
+| Maven        | 3.x      | Dependency management |
 
-## 📦 Servisler
+## 📦 Services
 
 ### 1. API Gateway
 
 - **Port:** 8080
-- **Açıklama:** Tüm isteklerin giriş noktası. Routlama, load balancing ve authentication sağlar.
-- **Teknoloji:** Spring Cloud Gateway
+- **Description:** Entry point for all requests. Provides routing, load balancing, and authentication.
+- **Technology:** Spring Cloud Gateway
 
 ### 2. Courier Service
 
-- **Port:** 8081
-- **Açıklama:** Kurye bilgilerinin yönetimi ve işlenmesi
-- **Veritabanı:** PostgreSQL + Couchbase
-- **Teknoloji:** Spring Data JPA, QueryDSL, Liquibase
+- **Port:** 8083
+- **Description:** Management and processing of courier information
+- **Database:** PostgreSQL
+- **Technology:** Spring Data JPA, Liquibase
 
 ### 3. Distance Service
 
-- **Port:** 8082
-- **Açıklama:** Mesafe hesaplama ve optimizasyon algoritmaları
-- **Veritabanı:** MongoDB + Couchbase
-- **Teknoloji:** Spring Data MongoDB
+- **Port:** 8085
+- **Description:** Distance calculation and optimization algorithms
+- **Database:** MongoDB + Couchbase
+- **Technology:** Spring Data MongoDB
 
 ### 4. Location Service
 
-- **Port:** 8083
-- **Açıklama:** Konum tabanlı servisler
-- **Teknoloji:** Spring Boot Web
+- **Port:** 8081
+- **Description:** Location-based services
+- **Database:** MongoDB
+- **Technology:** Spring Boot Web
 
 ### 5. Store Service
 
-- **Port:** 8084
-- **Açıklama:** Depo bilgilerinin yönetimi
-- **Teknoloji:** Spring Boot Web
+- **Port:** 8082
+- **Description:** Management of warehouse/store information
+- **Database:** MongoDB + Couchbase
+- **Technology:** Spring Boot Web
 
-## 🚀 Başlangıç
+## 🚀 Getting Started
 
-### Ön Gereksinimler
+### Prerequisites
 
-- Java 21 kurulu olmalı
-- Maven 3.8.0 veya üzeri
+- Java 21 must be installed
+- Maven 3.8.0 or higher
 - Docker & Docker Compose
 - Git
 
-### Kurulum Adımları
+### Installation Steps
 
-1. **Projeyi klonlayın:**
-
-```bash
-git clone <repository-url>
-cd courier-tracking
-```
-
-2. **Altyapıyı başlatın:**
+1. **Start the infrastructure:**
 
 ```bash
 cd courier-tracking-parent
 docker-compose up -d
 ```
 
-Docker Compose aşağıdaki servisleri başlatacak:
+Docker Compose will start the following services:
 
 - PostgreSQL
 - Couchbase
@@ -126,14 +121,14 @@ Docker Compose aşağıdaki servisleri başlatacak:
 - Kafka UI
 - Mongo Express
 
-3. **Projeyi derleyin:**
+2. **Build the project:**
 
 ```bash
 cd courier-tracking-parent
 mvn clean install
 ```
 
-4. **Servisleri başlatın (her biri için ayrı terminal):**
+3. **Start the services (separate terminal for each):**
 
 **API Gateway:**
 
@@ -170,24 +165,24 @@ cd store-service
 mvn spring-boot:run
 ```
 
-## 🔌 Veritabanı Bağlantı Bilgileri
+## 🔌 Database Connection Details
 
-| Veritabanı | Host      | Port      | Kullanıcı | Şifre      |
-|------------|-----------|-----------|-----------|------------|
-| PostgreSQL | localhost | 5432      | courier   | courier123 |
-| MongoDB    | localhost | 27017     | -         | -          |
-| Couchbase  | localhost | 8091-8097 | admin     | password   |
-| Kafka      | localhost | 9092      | -         | -          |
+| Database   | Host      | Port      | Username | Password   |
+|------------|-----------|-----------|----------|------------|
+| PostgreSQL | localhost | 5432      | courier  | courier123 |
+| MongoDB    | localhost | 27017     | -        | -          |
+| Couchbase  | localhost | 8091-8097 | admin    | password   |
+| Kafka      | localhost | 9092      | -        | -          |
 
-### Veritabanı Arayüzleri
+### Database Interfaces
 
 - **Kafka UI:** http://localhost:9090
 - **Mongo Express:** http://localhost:7071
 - **Couchbase:** http://localhost:8091
 
-## 📡 API Ağ Geçidi
+## 📡 API Gateway
 
-Tüm API istekleri API Gateway üzerinden yapılır:
+All API requests are made through the API Gateway:
 
 ```
 curl -X GET http://localhost:8080/api/v1/couriers
@@ -196,34 +191,34 @@ curl -X GET http://localhost:8080/api/v1/locations
 curl -X GET http://localhost:8080/api/v1/stores
 ```
 
-## 🧪 Testler
+## 🧪 Tests
 
-Bütün testleri çalıştırmak için:
+To run all tests:
 
 ```bash
 cd courier-tracking-parent
 mvn test
 ```
 
-Specific servisi test etmek için:
+To test a specific service:
 
 ```bash
 cd courier-service
 mvn test
 ```
 
-## 🐳 Docker ile Deployment
+## 🐳 Deployment with Docker
 
-Her servis için Dockerfile mevcuttur. Tüm servisleri Docker ile çalıştırmak için:
+A Dockerfile is available for each service. To run all services with Docker:
 
 ```bash
 cd courier-tracking-parent
 docker-compose -f docker-compose.yml up -d
 ```
 
-## 📊 Lokal Geliştirme Configuration
+## 📊 Local Development Configuration
 
-Her servis için `application.yml` dosyası mevcuttur:
+An `application.yml` file is available for each service:
 
 - `courier-service/src/main/resources/application.yml`
 - `distance-service/src/main/resources/application.yml`
@@ -231,7 +226,7 @@ Her servis için `application.yml` dosyası mevcuttur:
 - `store-service/src/main/resources/application.yml`
 - `api-gateway-courier-tracking/src/main/resources/application.yml`
 
-## 📝 Proje Yapısı
+## 📝 Project Structure
 
 ```
 courier-tracking/
